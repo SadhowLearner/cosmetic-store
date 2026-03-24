@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BookingTransactions\Schemas;
 
+use App\Models\Cosmetic;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
@@ -10,10 +11,13 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Flex;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+// use Filament\Support\RawJs;
 
 class BookingTransactionForm
 {
@@ -22,10 +26,48 @@ class BookingTransactionForm
         $cosmetic = \App\Models\Cosmetic::find($state);
         $set('price', $cosmetic?->price ?? 0);
         $set('price_display', number_format($cosmetic?->price ?? 0, 0, ',', '.'));
-        $price = $get('price') ?? 0;
+
+        if (is_numeric($get('price'))) {
+            $set('price', $get('price'));
+        } else {
+            $set('price', 0);
+        }
+        $price =  $get('price');
         $qty = $get('qty') ?? 0;
+
         $subTotal = $price * $qty;
-        $set('sub_total_amount', number_format($subTotal, 0, ',', '.'));
+        $set('sub_total', number_format($subTotal, 0, ',', '.'));
+    }
+
+    public static function updateTotals(Get $get, Set $set)
+    {
+        $details = collect($get('detail'));
+
+        $cosmeticIds = $details->pluck('cosmetic_id')->filter()->unique();
+
+        $prices = Cosmetic::whereIn('id', $cosmeticIds)->pluck('price', 'id');
+
+        // dump($prices);
+
+        $subTotalAmount = $details->sum(function ($item) use ($prices) {
+            $price = $prices->get($item['cosmetic_id'] ?? null, 0);
+            $qty = is_numeric($item['qty']) ? $item['qty'] : 0;
+            return $price * $qty;
+        });
+
+        // dump($subTotalAmount);
+        // // dd($get('qty'));
+        // $subTotalAmount = $details->sum('detail.sub_total');
+        $set('sub_total_amount', number_format($subTotalAmount, 0, ',', '.'));
+
+        $totalTaxAmount = round($subTotalAmount * 0.11); // Assuming a tax rate of 11%
+        $set('total_tax_amount', number_format($totalTaxAmount, 0, ',', '.'));
+
+        $totalQty = $details->sum('qty');
+        $set('total_quantity', $totalQty);
+
+        $totalAmount = round($subTotalAmount + $totalTaxAmount);
+        $set('total_amount', number_format($totalAmount, 0, ',', '.'));
     }
 
     public static function configure(Schema $schema): Schema
@@ -38,9 +80,26 @@ class BookingTransactionForm
                         ->completedIcon('heroicon-o-check')
                         ->description('Enter the product details and pricing information.')
                         ->schema([
-                            Repeater::make('Transaction Details')
+                            Repeater::make('detail')
                                 ->relationship('detail')
                                 ->columns(3)
+                                ->live()
+
+                                ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                                    if (is_array($state)) {
+                                        foreach ($state as $index => $item) {
+                                            if (isset($item['cosmetic_id']) && isset($item['qty'])) {
+                                                self::updateSubTotal($item['cosmetic_id'], function ($field, $value) use ($index, $set) {
+                                                    $set("detail.{$index}.{$field}", $value);
+                                                }, function ($field) use ($index, $get) {
+                                                    return $get("detail.{$index}.{$field}");
+                                                });
+                                            }
+                                        }
+                                    } else {
+                                        self::updateTotals($get, $set);
+                                    }
+                                })
                                 ->schema(
                                     [
                                         Select::make('cosmetic_id')
@@ -59,52 +118,57 @@ class BookingTransactionForm
                                             ->required()
                                             ->numeric()
                                             ->live()
+                                            // ->empty(0)
                                             ->afterStateUpdated(function ($state, callable $set, $get) {
-
                                                 self::updateSubTotal($get('cosmetic_id'), $set, $get);
                                             })
-                                            ->default(1),
+                                            ->default(0)
+                                            ->minValue(0)
+                                            ->dehydrateStateUsing(fn($state) => (int) ($state ?: 0)),
                                         TextInput::make('price_display')
-                                            ->label('Price')
+                                            ->label('Cosmetic Price')
                                             ->readOnly()
                                             ->default('0')
                                             ->dehydrated(false)
                                             ->prefix('IDR'),
                                         Hidden::make('price')
                                             ->required(),
-                                        TextInput::make('sub_total_amount')
+                                        TextInput::make('sub_total')
                                             ->label('Sub Total')
                                             ->readOnly()
                                             ->dehydrated(false)
                                             ->prefix('IDR')
                                             ->default('0')
-                                            ->columnSpanFull()
+                                            ->columnSpanFull(),
                                     ]
                                 ),
+
                             Flex::make([
                                 TextInput::make('total_amount')
                                     ->label('Total Amount')
                                     ->readOnly()
+                                    ->reactive()
                                     ->prefix('IDR')
                                     ->default('0'),
-                                TextInput::make('total_amount')
-                                    ->label('Total Amount')
+                                TextInput::make('total_tax_amount')
+                                    ->label('Total Tax Amount')
                                     ->readOnly()
+                                    ->reactive()
                                     ->prefix('IDR')
                                     ->default('0'),
-                                TextInput::make('total_amount')
-                                    ->label('Total Amount')
+                                TextInput::make('sub_total_amount')
+                                    ->label('Sub Total Amount')
                                     ->readOnly()
+                                    ->reactive()
                                     ->prefix('IDR')
                                     ->default('0'),
-                                TextInput::make('total_amount')
-                                    ->label('Total Amount')
+                                TextInput::make('total_quantity')
+                                    ->label('Quantity')
                                     ->readOnly()
-                                    ->prefix('IDR')
+                                    ->reactive()
                                     ->default('0'),
-                            ])
-                                ->columns(4)
-                                ->columnSpanFull(),
+                            ])->columns(4)->columnSpanFull(),
+
                         ]),
                     Step::make('Customer Information')
                         ->completedIcon('heroicon-o-check')
@@ -149,7 +213,7 @@ class BookingTransactionForm
                                 ->columnSpanFull()
                                 ->label('Proof of Payment')
                                 ->image(),
-                            
+
                         ])
                 ])
                     ->skippable()
