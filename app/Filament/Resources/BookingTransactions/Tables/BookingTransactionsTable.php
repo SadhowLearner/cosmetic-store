@@ -2,13 +2,18 @@
 
 namespace App\Filament\Resources\BookingTransactions\Tables;
 
+use App\Models\BookingTransaction;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -28,12 +33,14 @@ class BookingTransactionsTable
                     ->searchable(),
                 TextColumn::make('phone')
                     ->searchable(),
-                TextColumn::make('proof')
+                ImageColumn::make('proof')
                     ->searchable(),
                 TextColumn::make('post_code')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('city')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('total_qty')
                     ->numeric()
                     ->sortable(),
@@ -65,8 +72,25 @@ class BookingTransactionsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                Action::make('approve')
+                        ->label('Approve')
+                        ->icon('heroicon-o-check')
+                        ->visible(fn($record) => !$record->is_paid)
+                        ->action(function (BookingTransaction $record) {
+                            $record->update(['is_paid' => true]);
+                            Notification::make()
+                                ->title('Prder Approved')
+                                ->body('Booking transaction approved successfully')
+                                ->success()
+                                ->send();
+                        })
+                        ->color('success')
+                        ->requiresConfirmation(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ])->color('secondary'),
+                
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
