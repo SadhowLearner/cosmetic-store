@@ -28,7 +28,7 @@ class BookingTransactionInfolist
                     ->placeholder('-'),
                 TextEntry::make('address')
                     ->columnSpanFull(),
-                TextEntry::make('qty')
+                TextEntry::make('total_qty')
                     ->numeric(),
                 TextEntry::make('sub_total_amount')
                     ->numeric(),

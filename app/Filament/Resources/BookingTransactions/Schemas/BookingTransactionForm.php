@@ -47,24 +47,19 @@ class BookingTransactionForm
 
         $prices = Cosmetic::whereIn('id', $cosmeticIds)->pluck('price', 'id');
 
-        // dump($prices);
 
         $subTotalAmount = $details->sum(function ($item) use ($prices) {
             $price = $prices->get($item['cosmetic_id'] ?? null, 0);
             $qty = is_numeric($item['qty']) ? $item['qty'] : 0;
             return $price * $qty;
         });
-
-        // dump($subTotalAmount);
-        // // dd($get('qty'));
-        // $subTotalAmount = $details->sum('detail.sub_total');
-        $set('sub_total_amount', number_format($subTotalAmount, 0, ',', '.'));
+        $set('sub_total_amount', $subTotalAmount);
 
         $totalTaxAmount = round($subTotalAmount * 0.11); // Assuming a tax rate of 11%
-        $set('total_tax_amount', number_format($totalTaxAmount, 0, ',', '.'));
+        $set('total_tax_amount', $totalTaxAmount);
 
-        $totalQty = $details->sum('qty');
-        $set('total_quantity', $totalQty);
+        $totalQty = $details->sum(fn($item) => is_numeric($item['qty'] ?? null) ? (int) $item['qty'] : 0);
+        $set('total_qty', $totalQty);
 
         $totalAmount = round($subTotalAmount + $totalTaxAmount);
         $set('total_amount', number_format($totalAmount, 0, ',', '.'));
@@ -74,7 +69,6 @@ class BookingTransactionForm
     {
         return $schema
             ->components([
-
                 Wizard::make([
                     Step::make('Product & Price')
                         ->completedIcon('heroicon-o-check')
@@ -85,20 +79,8 @@ class BookingTransactionForm
                                 ->columns(3)
                                 ->live()
 
-                                ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                                    if (is_array($state)) {
-                                        foreach ($state as $index => $item) {
-                                            if (isset($item['cosmetic_id']) && isset($item['qty'])) {
-                                                self::updateSubTotal($item['cosmetic_id'], function ($field, $value) use ($index, $set) {
-                                                    $set("detail.{$index}.{$field}", $value);
-                                                }, function ($field) use ($index, $get) {
-                                                    return $get("detail.{$index}.{$field}");
-                                                });
-                                            }
-                                        }
-                                    } else {
-                                        self::updateTotals($get, $set);
-                                    }
+                                ->afterStateUpdated(function (Set $set, Get $get) {
+                                    self::updateTotals($get, $set);
                                 })
                                 ->schema(
                                     [
@@ -118,8 +100,7 @@ class BookingTransactionForm
                                             ->required()
                                             ->numeric()
                                             ->live()
-                                            // ->empty(0)
-                                            ->afterStateUpdated(function ($state, callable $set, $get) {
+                                            ->afterStateUpdated(function (Set $set, Get $get) {
                                                 self::updateSubTotal($get('cosmetic_id'), $set, $get);
                                             })
                                             ->default(0)
@@ -144,29 +125,34 @@ class BookingTransactionForm
                                 ),
 
                             Flex::make([
-                                TextInput::make('total_amount')
-                                    ->label('Total Amount')
-                                    ->readOnly()
-                                    ->reactive()
-                                    ->prefix('IDR')
-                                    ->default('0'),
-                                TextInput::make('total_tax_amount')
-                                    ->label('Total Tax Amount')
-                                    ->readOnly()
-                                    ->reactive()
-                                    ->prefix('IDR')
-                                    ->default('0'),
-                                TextInput::make('sub_total_amount')
+                                TextInput::make('sub_total_amount_display')
                                     ->label('Sub Total Amount')
                                     ->readOnly()
+                                    ->dehydrated(false)
                                     ->reactive()
                                     ->prefix('IDR')
                                     ->default('0'),
-                                TextInput::make('total_quantity')
-                                    ->label('Quantity')
+                                TextInput::make('total_tax_amount_display')
+                                    ->label('Total Tax Amount (11%)')
                                     ->readOnly()
+                                    ->dehydrated(false)
                                     ->reactive()
+                                    ->prefix('IDR')
                                     ->default('0'),
+                                TextInput::make('total_amount_display')
+                                    ->label('Total Amount')
+                                    ->readOnly()
+                                    ->dehydrated(false)
+                                    ->reactive()
+                                    ->prefix('IDR')
+                                    ->default('0'),
+                                TextInput::make('total_qty')
+                                    ->label('Total Quantity')
+                                    ->readOnly()
+                                    ->default(0),
+                                Hidden::make('sub_total_amount')->required(),
+                                Hidden::make('total_tax_amount')->required(),
+                                Hidden::make('total_amount')->required(),
                             ])->columns(4)->columnSpanFull(),
 
                         ]),

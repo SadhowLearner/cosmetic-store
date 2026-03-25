@@ -34,7 +34,7 @@ class BookingTransactionsTable
                     ->searchable(),
                 TextColumn::make('city')
                     ->searchable(),
-                TextColumn::make('qty')
+                TextColumn::make('total_qty')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('sub_total_amount')
