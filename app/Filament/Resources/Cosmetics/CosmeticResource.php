@@ -29,7 +29,7 @@ class CosmeticResource extends Resource
     protected static ?string $recordTitleAttribute = 'name';
 
 
-    protected static UnitEnum|string|null $navigationGroup = 'Partnership';
+    protected static UnitEnum|string|null $navigationGroup = 'Product';
 
 
     public static function form(Schema $schema): Schema
