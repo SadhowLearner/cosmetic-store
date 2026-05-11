@@ -27,7 +27,7 @@ return new class extends Migration
             $table->bigInteger('sub_total_amount')->unsigned();
             $table->bigInteger('total_amount')->unsigned();
             $table->bigInteger('total_tax_amount')->unsigned();
-            
+
             $table->boolean('is_paid')->default(false);
 
             $table->softDeletes();

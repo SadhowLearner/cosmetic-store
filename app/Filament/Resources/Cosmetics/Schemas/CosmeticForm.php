@@ -5,8 +5,8 @@ namespace App\Filament\Resources\Cosmetics\Schemas;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Schema;
 
@@ -71,8 +71,8 @@ class CosmeticForm
                             ])
                             ->required(),
                         Textarea::make('about')
-                            ->columnSpanFull()
-                    ])
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 }

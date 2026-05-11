@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Categories\Schemas;
 
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class CategoryForm
@@ -25,7 +25,7 @@ class CategoryForm
                         '1:1',
                     ])
                     ->avatar()
-                    ->circleCropper()
+                    ->circleCropper(),
             ]);
     }
 }

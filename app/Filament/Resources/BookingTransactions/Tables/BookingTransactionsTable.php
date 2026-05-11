@@ -73,24 +73,24 @@ class BookingTransactionsTable
             ])
             ->recordActions([
                 Action::make('approve')
-                        ->label('Approve')
-                        ->icon('heroicon-o-check')
-                        ->visible(fn($record) => !$record->is_paid)
-                        ->action(function (BookingTransaction $record) {
-                            $record->update(['is_paid' => true]);
-                            Notification::make()
-                                ->title('Prder Approved')
-                                ->body('Booking transaction approved successfully')
-                                ->success()
-                                ->send();
-                        })
-                        ->color('success')
-                        ->requiresConfirmation(),
+                    ->label('Approve')
+                    ->icon('heroicon-o-check')
+                    ->visible(fn ($record) => ! $record->is_paid)
+                    ->action(function (BookingTransaction $record) {
+                        $record->update(['is_paid' => true]);
+                        Notification::make()
+                            ->title('Prder Approved')
+                            ->body('Booking transaction approved successfully')
+                            ->success()
+                            ->send();
+                    })
+                    ->color('success')
+                    ->requiresConfirmation(),
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
                 ])->color('secondary'),
-                
+
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

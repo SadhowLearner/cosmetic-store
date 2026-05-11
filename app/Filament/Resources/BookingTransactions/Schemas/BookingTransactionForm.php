@@ -11,19 +11,20 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Flex;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+
 // use Filament\Support\RawJs;
 
 class BookingTransactionForm
 {
     public static function updateSubTotal($state, callable $set, $get)
     {
-        $cosmetic = \App\Models\Cosmetic::find($state);
+        $cosmetic = Cosmetic::find($state);
         $set('price', $cosmetic?->price ?? 0);
         $set('price_display', number_format($cosmetic?->price ?? 0, 0, ',', '.'));
 
@@ -32,7 +33,7 @@ class BookingTransactionForm
         } else {
             $set('price', 0);
         }
-        $price =  $get('price');
+        $price = $get('price');
         $qty = $get('qty') ?? 0;
 
         $subTotal = $price * $qty;
@@ -47,10 +48,10 @@ class BookingTransactionForm
 
         $prices = Cosmetic::whereIn('id', $cosmeticIds)->pluck('price', 'id');
 
-
         $subTotalAmount = $details->sum(function ($item) use ($prices) {
             $price = $prices->get($item['cosmetic_id'] ?? null, 0);
             $qty = is_numeric($item['qty']) ? $item['qty'] : 0;
+
             return $price * $qty;
         });
         $set('sub_total_amount', $subTotalAmount);
@@ -58,7 +59,7 @@ class BookingTransactionForm
         $totalTaxAmount = round($subTotalAmount * 0.11); // Assuming a tax rate of 11%
         $set('total_tax_amount', $totalTaxAmount);
 
-        $totalQty = $details->sum(fn($item) => is_numeric($item['qty'] ?? null) ? (int) $item['qty'] : 0);
+        $totalQty = $details->sum(fn ($item) => is_numeric($item['qty'] ?? null) ? (int) $item['qty'] : 0);
         $set('total_qty', $totalQty);
 
         $totalAmount = round($subTotalAmount + $totalTaxAmount);
@@ -105,7 +106,7 @@ class BookingTransactionForm
                                             })
                                             ->default(0)
                                             ->minValue(0)
-                                            ->dehydrateStateUsing(fn($state) => (int) ($state ?: 0)),
+                                            ->dehydrateStateUsing(fn ($state) => (int) ($state ?: 0)),
                                         TextInput::make('price_display')
                                             ->label('Cosmetic Price')
                                             ->readOnly()
@@ -192,7 +193,7 @@ class BookingTransactionForm
                                 ->grouped()
                                 ->icons([
                                     true => Heroicon::OutlinedPencil,
-                                    false => Heroicon::OutlinedClock
+                                    false => Heroicon::OutlinedClock,
                                 ])
                                 ->required(),
                             FileUpload::make('proof')
@@ -200,7 +201,7 @@ class BookingTransactionForm
                                 ->label('Proof of Payment')
                                 ->image(),
 
-                        ])
+                        ]),
                 ])
                     ->skippable()
                     ->columns(1)

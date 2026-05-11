@@ -9,15 +9,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class CosmeticPhoto extends Model
 {
     use SoftDeletes;
+
     protected $guarded = [];
 
-       /**
-    * Get the cosmetic that owns the CosmeticBenefit
-    *
-    * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-    */
-   public function cosmetic(): BelongsTo
-   {
-       return $this->belongsTo(Cosmetic::class);
-   }
+    /**
+     * Get the cosmetic that owns the CosmeticBenefit
+     */
+    public function cosmetic(): BelongsTo
+    {
+        return $this->belongsTo(Cosmetic::class);
+    }
 }

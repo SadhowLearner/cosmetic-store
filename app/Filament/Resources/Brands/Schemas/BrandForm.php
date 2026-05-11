@@ -25,7 +25,7 @@ class BrandForm
                         '1:1',
                     ])
                     ->avatar()
-                    ->circleCropper()
+                    ->circleCropper(),
             ]);
     }
 }

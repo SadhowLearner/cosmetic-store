@@ -20,7 +20,7 @@ class BrandInfolist
                 TextEntry::make('slug'),
                 TextEntry::make('deleted_at')
                     ->dateTime()
-                    ->visible(fn(Brand $record): bool => $record->trashed()),
+                    ->visible(fn (Brand $record): bool => $record->trashed()),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

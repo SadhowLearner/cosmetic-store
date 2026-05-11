@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
+    use HasFactory, SoftDeletes;
 
-    use SoftDeletes;
     protected $guarded = [];
 
     /**
      * Get all of the cosmetics for the Category
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function cosmetic(): HasMany
+    public function cosmetics(): HasMany
     {
         return $this->hasMany(Cosmetic::class);
     }
@@ -32,5 +31,4 @@ class Category extends Model
         $this->attributes['name'] = $value;
         $this->attributes['slug'] = str($value)->slug();
     }
-
 }

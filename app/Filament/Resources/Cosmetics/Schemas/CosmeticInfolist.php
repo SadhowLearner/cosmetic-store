@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Cosmetics\Schemas;
 
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -23,7 +23,6 @@ class CosmeticInfolist
                     ])
                     ->columnSpan(3),
 
-                
                 Section::make('Basic Information')
                     ->columns(1)
                     ->schema([
@@ -35,7 +34,6 @@ class CosmeticInfolist
                     ])
                     ->columnSpan(2),
 
-                
                 Section::make('Pricing & Stock')
                     ->columns(3)
                     ->schema([
@@ -65,7 +63,7 @@ class CosmeticInfolist
 
                         TextEntry::make('deleted_at')
                             ->dateTime()
-                            ->visible(fn($record) => $record->trashed()),
+                            ->visible(fn ($record) => $record->trashed()),
                     ])
                     ->columnSpanFull()
                     ->collapsed(),

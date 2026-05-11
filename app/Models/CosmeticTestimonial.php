@@ -9,12 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class CosmeticTestimonial extends Model
 {
     use SoftDeletes;
+
     protected $guarded = [];
 
     /**
      * Get the cosmetic that owns the CosmeticTestimonial
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function cosmetic(): BelongsTo
     {

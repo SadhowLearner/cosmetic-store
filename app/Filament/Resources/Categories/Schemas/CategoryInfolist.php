@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Categories\Schemas;
 
 use App\Models\Category;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
 class CategoryInfolist
@@ -20,7 +20,7 @@ class CategoryInfolist
                 TextEntry::make('slug'),
                 TextEntry::make('deleted_at')
                     ->dateTime()
-                    ->visible(fn(Category $record): bool => $record->trashed()),
+                    ->visible(fn (Category $record): bool => $record->trashed()),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),
