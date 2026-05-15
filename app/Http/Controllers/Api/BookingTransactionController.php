@@ -76,6 +76,25 @@ class BookingTransactionController extends Controller
         }
     }
 
+
+    public function bookingDetails(Request $request)  // phpcs:ignore Squiz.WhiteSpace.SuperfluousWhitespace.EndLine
+    {
+        $request->validate([
+            'booking_trx_id' => 'required|string',
+            'email' => 'required|email'
+        ]) ;
+        $booking = BookingTransaction::where('booking_trx_id', $request->booking_trx_id)
+        ->where('email', $request->email)
+        ->with(['details', 'details.cosmetic'])
+        ->first();
+
+        if (!$booking) {
+            return  response()->json(['message' => 'Booking Transaction Not Found'], 404);
+        }
+
+        return new BookingTransactionApiResource($booking);
+    }
+
     /**
      * Display the specified resource.
      */
